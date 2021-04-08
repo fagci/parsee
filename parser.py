@@ -17,6 +17,8 @@ class Result(ResultSet):
         return self.__truediv__(i)
 
     def __floordiv__(self, v):
+        if isinstance(v, tuple) or isinstance(v, list):
+            return [tuple(getattr(r, vv if vv != 'tag' else 'name') if vv in ['text', 'tag'] else r.get(vv) for vv in v) for r in self]
         if v == 'text':
             return [e.text for e in self]
         return [e.get(v) for e in self]
@@ -72,7 +74,5 @@ if __name__ == '__main__':
     <li>Item 3</li>
     </ul>
     """
-    p = Parser(markup=m)
-    p1 = p['li'] // 'text'
-
-    print(p1)
+    for tag, text in Parser(markup=m)['li'] // ('tag', 'text'):
+        print(tag, text)
