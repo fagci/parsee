@@ -34,7 +34,7 @@ class Result(ResultSet):
 class Parser(BeautifulSoup):
     headers = {'User-Agent': 'Mozilla/5.0'}
 
-    def __init__(self, uri='', markup=''):
+    def __init__(self, uri='', markup='', session=None):
         from urllib.parse import ParseResult, urlparse
         from requests import Session
         from requests.adapters import HTTPAdapter
@@ -44,12 +44,16 @@ class Parser(BeautifulSoup):
 
         pu: ParseResult = urlparse(uri)
 
+        self.scheme = pu.scheme
         self.host = pu.hostname
         self.start_path = '?'.join((pu.path, pu.query))
         self.base = '%s://%s' % (pu.scheme, pu.netloc)
 
-        self._session = Session()
-        self._session.mount(self.base, HTTPAdapter(max_retries=3))
+        if session:
+            self._session = session
+        else:
+            self._session = Session()
+            self._session.mount(self.base, HTTPAdapter(max_retries=3))
 
         if uri:
             try:
@@ -59,6 +63,13 @@ class Parser(BeautifulSoup):
                 super().__init__('', 'lxml')
         elif markup:
             super().__init__(markup, 'lxml')
+
+    def load(self, uri):
+        if uri.startswith('//'):
+            uri = '%s:%s' % (self.scheme, uri)
+        elif uri.startswith('/'):
+            uri = '%s%s' % (self.base, uri)
+        return Parser(uri, session=self._session)
 
     def __truediv__(self, v):
         if isinstance(v, int):
