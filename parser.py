@@ -13,6 +13,11 @@ class Result(ResultSet):
             return self[v]
         raise NotImplementedError
 
+    def __floordiv__(self, v):
+        if v == 'text':
+            return [e.text for e in self]
+        return [e.get(v) for e in self]
+
 
 class Parser(BeautifulSoup):
     headers = {'User-Agent': 'Mozilla/5.0'}
@@ -69,6 +74,6 @@ if __name__ == '__main__':
     </ul>
     """
     p = Parser(markup=m)
-    p1 = p / 'li' / 1
+    p1 = p / 'li' // 'text'
 
     print(p1)
