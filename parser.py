@@ -54,15 +54,13 @@ class Parser(BeautifulSoup):
 
         return Result(self, self.select(v))
 
-    @property
-    def result(self):
-        return self._results[self._current_level-1]
-
     def __repr__(self):
         return str(self.result)
 
     def __getitem__(self, i):
-        return self.result[i]
+        if isinstance(i, str):
+            return Result(self, self.select(i))
+        return self[i]
 
 
 if __name__ == '__main__':
@@ -74,6 +72,6 @@ if __name__ == '__main__':
     </ul>
     """
     p = Parser(markup=m)
-    p1 = p / 'li' // 'text'
+    p1 = p['li'] // 'text'
 
     print(p1)
