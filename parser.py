@@ -91,5 +91,15 @@ if __name__ == '__main__':
 
     for href, text in page['.c2 a'] // ('href', 'text'):
         print(href, text)
-        title = Parser(href) / 'title' / 0
-        print(title.text)
+
+        page = Parser(href)
+        title = (page / 'title' / 0).text
+        links = page / 'a'
+
+        print(title)
+
+        for text in links // 'text':
+            print(text.strip())
+
+        for src, ds, alt in page / 'img' // ('src', 'data-src', 'alt'):
+            print(alt, ':', src or ds)
