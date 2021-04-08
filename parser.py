@@ -18,10 +18,16 @@ class Result(ResultSet):
 
     def __floordiv__(self, v):
         if isinstance(v, tuple) or isinstance(v, list):
-            return [tuple(getattr(r, vv if vv != 'tag' else 'name') if vv in ['text', 'tag'] else r.get(vv) for vv in v) for r in self]
-        if v == 'text':
-            return [e.text for e in self]
-        return [e.get(v) for e in self]
+            return [tuple(self.getprop(vv, r) for vv in v) for r in self]
+        return [self.getprop(v, r) for r in self]
+
+    @staticmethod
+    def getprop(prop, item):
+        if prop == 'tag':
+            return item.name
+        if prop == 'text':
+            return item.text
+        return item.get(prop)
 
 
 class Parser(BeautifulSoup):
@@ -69,10 +75,10 @@ class Parser(BeautifulSoup):
 if __name__ == '__main__':
     m = """
     <ul class="c1">
-    <li>Item 1</li>
+    <li class="sup">Item 1</li>
     <li>Item 2</li>
-    <li>Item 3</li>
+    <li class="sup">Item 3</li>
     </ul>
     """
-    for tag, text in Parser(markup=m)['li'] // ('tag', 'text'):
+    for tag, text in Parser(markup=m)['li.sup'] // ('tag', 'text'):
         print(tag, text)
