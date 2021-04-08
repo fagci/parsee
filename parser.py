@@ -1,6 +1,17 @@
 #!/usr/bin/env python3
 
 from bs4 import BeautifulSoup
+from bs4.element import ResultSet
+
+
+class Result(ResultSet):
+    def __init__(self, source, result):
+        super().__init__(source, result=result)
+
+    def __truediv__(self, v):
+        if isinstance(v, int):
+            return self[v]
+        raise NotImplementedError
 
 
 class Parser(BeautifulSoup):
@@ -33,7 +44,10 @@ class Parser(BeautifulSoup):
             super().__init__(markup, 'lxml')
 
     def __truediv__(self, v):
-        return self.select(v)
+        if isinstance(v, int):
+            return self[v]
+
+        return Result(self, self.select(v))
 
     @property
     def result(self):
@@ -55,6 +69,6 @@ if __name__ == '__main__':
     </ul>
     """
     p = Parser(markup=m)
-    p1 = p / 'ul'
+    p1 = p / 'li' / 1
 
     print(p1)
