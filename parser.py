@@ -13,6 +13,9 @@ class Result(ResultSet):
             return self[v]
         raise NotImplementedError
 
+    def __getitem__(self, i):
+        return self.__truediv__(i)
+
     def __floordiv__(self, v):
         if v == 'text':
             return [e.text for e in self]
@@ -58,9 +61,7 @@ class Parser(BeautifulSoup):
         return str(self.result)
 
     def __getitem__(self, i):
-        if isinstance(i, str):
-            return Result(self, self.select(i))
-        return self[i]
+        return self.__truediv__(i)
 
 
 if __name__ == '__main__':
