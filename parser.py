@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import sys
 
 from bs4 import BeautifulSoup
 from bs4.element import ResultSet
@@ -9,6 +10,8 @@ class Result(ResultSet):
         super().__init__(source, result=result)
 
     def __truediv__(self, v):
+        if v == '@':
+            return self.load()
         if isinstance(v, int):
             # TODO: make possible // for tag
             return super().__getitem__(v)
@@ -21,6 +24,9 @@ class Result(ResultSet):
         if isinstance(v, tuple) or isinstance(v, list):
             return [tuple(self.getprop(vv, r) for vv in v) for r in self]
         return [self.getprop(v, r) for r in self]
+
+    def load(self):
+        return (self.source.load(r.get('href')) for r in self)
 
     @staticmethod
     def getprop(prop, item):
@@ -58,6 +64,8 @@ class Parser(BeautifulSoup):
         if uri:
             try:
                 r = self._session.get(uri, timeout=10, headers=self.headers)
+                if r.status_code >= 400:
+                    sys.stderr.write('err: %s %s\n' % (r.status_code, uri))
                 super().__init__(r.text, 'lxml')
             except RequestException:
                 super().__init__('', 'lxml')
@@ -74,6 +82,10 @@ class Parser(BeautifulSoup):
     def __truediv__(self, v):
         if isinstance(v, int):
             return super().__getitem__(v)
+
+        # parser / 'a@' -> load every link
+        if v.endswith('@'):
+            return Result(self, self.select(v[:-1])).load()
 
         return Result(self, self.select(v))
 
