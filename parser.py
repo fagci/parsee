@@ -112,10 +112,7 @@ if __name__ == '__main__':
 
     page = Parser(markup=m)
 
-    for href, text in page['.c2 a'] // ('href', 'text'):
-        print(href, text)
-
-        page = Parser(href)
+    for page in page['.c2 a@']:
         title = (page / 'title' / 0).text
         links = page / 'a'
 
@@ -126,3 +123,18 @@ if __name__ == '__main__':
 
         for src, ds, alt in page / 'img' // ('src', 'data-src', 'alt'):
             print(alt, ':', src or ds)
+
+    # for href, text in page['.c2 a'] // ('href', 'text'):
+    #     print(href, text)
+
+    #     page = Parser(href)
+    #     title = (page / 'title' / 0).text
+    #     links = page / 'a'
+
+    #     print(title)
+
+    #     for text in links // 'text':
+    #         print(text.strip())
+
+    #     for src, ds, alt in page / 'img' // ('src', 'data-src', 'alt'):
+    #         print(alt, ':', src or ds)
