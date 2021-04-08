@@ -10,7 +10,8 @@ class Result(ResultSet):
 
     def __truediv__(self, v):
         if isinstance(v, int):
-            return self[v]
+            # TODO: make possible // for tag
+            return super().__getitem__(v)
         raise NotImplementedError
 
     def __getitem__(self, i):
@@ -61,7 +62,7 @@ class Parser(BeautifulSoup):
 
     def __truediv__(self, v):
         if isinstance(v, int):
-            return self[v]
+            return super().__getitem__(v)
 
         return Result(self, self.select(v))
 
@@ -75,10 +76,20 @@ class Parser(BeautifulSoup):
 if __name__ == '__main__':
     m = """
     <ul class="c1">
-    <li class="sup">Item 1</li>
-    <li>Item 2</li>
-    <li class="sup">Item 3</li>
+        <li class="sup">Item 1</li>
+        <li>Item 2</li>
+        <li class="sup">Item 3</li>
+    </ul>
+    <ul class="c2">
+        <li class="sup"><a href="http://times.org">Times</a></li>
+        <li>Item 2</li>
+        <li class="sup">Item 3</li>
     </ul>
     """
-    for tag, text in Parser(markup=m)['li.sup'] // ('tag', 'text'):
-        print(tag, text)
+
+    page = Parser(markup=m)
+
+    for href, text in page['.c2 a'] // ('href', 'text'):
+        print(href, text)
+        title = Parser(href) / 'title' / 0
+        print(title.text)
