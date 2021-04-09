@@ -1,1 +1,3 @@
-# py_tiny_parser
+# Parsee
+
+Sweet python tiny site parser.
