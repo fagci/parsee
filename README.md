@@ -4,7 +4,7 @@ Sweet python tiny site parser.
 
 ## Examples
 
-### Crawl first page links, get paragraph next to heading contains text
+### Crawl first page links, get paragraph in each page next to heading contains text
 
 ```python
 for page in parser / '.links a@':
