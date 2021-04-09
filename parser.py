@@ -13,7 +13,6 @@ class Result(ResultSet):
         if v == '@':
             return self.load()
         if isinstance(v, int):
-            # TODO: make possible // for tag
             return super().__getitem__(v)
         raise NotImplementedError
 
