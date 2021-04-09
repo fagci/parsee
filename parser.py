@@ -2,7 +2,7 @@
 import sys
 
 from bs4 import BeautifulSoup
-from bs4.element import ResultSet
+from bs4.element import ResultSet, Tag
 
 
 class Result(ResultSet):
@@ -26,7 +26,7 @@ class Result(ResultSet):
         return [self.getprop(v, r) for r in self]
 
     def load(self):
-        return (self.source.load(r.get('href')) for r in self)
+        return (self.source.load(r) for r in self)
 
     @staticmethod
     def getprop(prop, item):
@@ -40,7 +40,7 @@ class Result(ResultSet):
 class Parser(BeautifulSoup):
     headers = {'User-Agent': 'Mozilla/5.0'}
 
-    def __init__(self, uri='', markup='', session=None):
+    def __init__(self, uri='', markup='', session=None, initiator=None):
         from urllib.parse import ParseResult, urlparse
         from requests import Session
         from requests.adapters import HTTPAdapter
@@ -54,6 +54,7 @@ class Parser(BeautifulSoup):
         self.host = pu.hostname
         self.start_path = '?'.join((pu.path, pu.query))
         self.base = '%s://%s' % (pu.scheme, pu.netloc)
+        self.initiator = initiator
 
         if session:
             self._session = session
@@ -73,11 +74,15 @@ class Parser(BeautifulSoup):
             super().__init__(markup, 'lxml')
 
     def load(self, uri):
+        initiator = self
+        if isinstance(uri, Tag) and uri.name == 'a':
+            initiator = uri
+            uri = uri.get('href')
         if uri.startswith('//'):
             uri = '%s:%s' % (self.scheme, uri)
         elif uri.startswith('/'):
             uri = '%s%s' % (self.base, uri)
-        return Parser(uri, session=self._session)
+        return Parser(uri, session=self._session, initiator=initiator)
 
     def __truediv__(self, v):
         if isinstance(v, int):
