@@ -64,6 +64,7 @@ class Parser(BeautifulSoup):
 
         if uri:
             try:
+                # print('GET', uri)
                 r = self._session.get(uri, timeout=10, headers=self.headers)
                 if r.status_code >= 400:
                     sys.stderr.write('err: %s %s\n' % (r.status_code, uri))
@@ -82,6 +83,9 @@ class Parser(BeautifulSoup):
             uri = '%s:%s' % (self.scheme, uri)
         elif uri.startswith('/'):
             uri = '%s%s' % (self.base, uri)
+        elif not uri.startswith(('http://', 'https://')):
+            # maybe wrong solution for paths: level1/level2.html
+            uri = '%s/%s' % (self.base, uri)
         return Parser(uri, session=self._session, initiator=initiator)
 
     def __truediv__(self, v):
