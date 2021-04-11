@@ -87,19 +87,29 @@ class Parser(BeautifulSoup):
             uri = '%s/%s' % (self.base, uri)
         return Parser(uri, session=self._session, initiator=initiator)
 
-    def __truediv__(self, v):
-        if isinstance(v, int):
-            return super().__getitem__(v)
+    def __truediv__(self, selector):
+        if isinstance(selector, int):
+            return super().__getitem__(selector)
+
+        rest = None
 
         # parser / 'a@' -> load every link
-        if '@' in v:
-            selector, _, rest = v.partition('@')
-            result = Result(self, self.select(selector)).load()
-            if rest:
-                return (r / rest for r in result)
-            return result
+        if '@' in selector:
+            selector, _, rest = selector.partition('@')
 
-        return Result(self, self.select(v))
+        result = Result(self, self.select(selector)).load()
+
+        if rest:
+            struct = None
+            if '@' not in rest and '|' in rest:
+                rest, _, struct = rest.partition('|')
+            result = (self.output(r, struct) / rest for r in result)
+
+        return result
+
+    def output(self, data, struct):
+        if struct is None:
+            return data
 
     def __repr__(self):
         return str(self.result)
@@ -110,7 +120,7 @@ class Parser(BeautifulSoup):
 
 def _main(start_uri, selector):
     for t in Parser(start_uri) / selector:
-        print(str(t))
+        print(str(t) if isinstance(t, Tag) else str(list(t)))
 
 
 if __name__ == '__main__':
