@@ -104,45 +104,10 @@ class Parser(BeautifulSoup):
         return self.__truediv__(i)
 
 
+def _main(start_uri, selector):
+    print('\n\n'.join(str(t) for t in Parser(start_uri) / selector))
+
+
 if __name__ == '__main__':
-    m = """
-    <ul class="c1">
-        <li class="sup">Item 1</li>
-        <li>Item 2</li>
-        <li class="sup">Item 3</li>
-    </ul>
-    <ul class="c2">
-        <li class="sup"><a href="http://times.org">Times</a></li>
-        <li>Item 2</li>
-        <li class="sup">Item 3</li>
-    </ul>
-    """
-
-    page = Parser(markup=m)
-
-    for page in page['.c2 a@']:
-        title = (page / 'title' / 0).text
-        links = page / 'a'
-
-        print(title)
-
-        for text in links // 'text':
-            print(text.strip())
-
-        for src, ds, alt in page / 'img' // ('src', 'data-src', 'alt'):
-            print(alt, ':', src or ds)
-
-    # for href, text in page['.c2 a'] // ('href', 'text'):
-    #     print(href, text)
-
-    #     page = Parser(href)
-    #     title = (page / 'title' / 0).text
-    #     links = page / 'a'
-
-    #     print(title)
-
-    #     for text in links // 'text':
-    #         print(text.strip())
-
-    #     for src, ds, alt in page / 'img' // ('src', 'data-src', 'alt'):
-    #         print(alt, ':', src or ds)
+    from fire import Fire
+    Fire(_main)
