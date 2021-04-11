@@ -92,8 +92,12 @@ class Parser(BeautifulSoup):
             return super().__getitem__(v)
 
         # parser / 'a@' -> load every link
-        if v.endswith('@'):
-            return Result(self, self.select(v[:-1])).load()
+        if '@' in v:
+            selector, _, rest = v.partition('@')
+            result = Result(self, self.select(selector)).load()
+            if rest:
+                return (r / rest for r in result)
+            return result
 
         return Result(self, self.select(v))
 
@@ -105,7 +109,8 @@ class Parser(BeautifulSoup):
 
 
 def _main(start_uri, selector):
-    print('\n\n'.join(str(t) for t in Parser(start_uri) / selector))
+    for t in Parser(start_uri) / selector:
+        print(str(t))
 
 
 if __name__ == '__main__':
