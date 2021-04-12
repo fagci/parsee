@@ -5,6 +5,20 @@ from bs4 import BeautifulSoup
 from bs4.element import ResultSet, Tag
 
 
+class Pages:
+    def __init__(self, pages):
+        self.pages = pages
+
+    def __iter__(self):
+        return self.pages
+
+    def __truediv__(self, v):
+        return (p / v for p in self.pages)
+
+    def __repr__(self):
+        return ','.join(str(p) for p in self.pages)
+
+
 class Result(ResultSet):
     def __init__(self, source, result):
         super().__init__(source, result=result)
@@ -25,7 +39,7 @@ class Result(ResultSet):
         return [self.getprop(v, r) for r in self]
 
     def load(self):
-        return (self.source.load(r) for r in self)
+        return Pages((self.source.load(r) for r in self))
 
     @staticmethod
     def getprop(prop, item):
@@ -39,13 +53,14 @@ class Result(ResultSet):
 class Parser(BeautifulSoup):
     headers = {'User-Agent': 'Mozilla/5.0'}
 
-    def __init__(self, uri='', markup='', session=None, initiator=None):
+    def __init__(self, uri='', markup='', session=None, initiator=None, debug=False):
         from urllib.parse import ParseResult, urlparse
         from requests import Session
         from requests.adapters import HTTPAdapter
         from requests.exceptions import RequestException
 
         self.start_uri = uri
+        self.debug = debug
 
         pu: ParseResult = urlparse(uri)
 
@@ -63,7 +78,8 @@ class Parser(BeautifulSoup):
 
         if uri:
             try:
-                # print('GET', uri)
+                if self.debug:
+                    print('GET', uri)
                 r = self._session.get(uri, timeout=10, headers=self.headers)
                 if r.status_code >= 400:
                     sys.stderr.write('err: %s %s\n' % (r.status_code, uri))
@@ -108,6 +124,7 @@ class Parser(BeautifulSoup):
             if '@' not in rest and '|' in rest:
                 rest, _, struct = rest.partition('|')
             result = (self.output(r, struct) / rest for r in result)
+            result = Pages(result)
 
         return result
 
