@@ -12,7 +12,7 @@ class Result(ResultSet):
     def __truediv__(self, v):
         if v == '@':
             return self.load()
-        if isinstance(v, int):
+        if isinstance(v, int) or isinstance(v, slice):
             return super().__getitem__(v)
         raise NotImplementedError
 
@@ -94,12 +94,13 @@ class Parser(BeautifulSoup):
         rest = None
 
         # parser / 'a@' -> load every link
-        if '@' in selector:
+        need_load = '@' in selector
+        if need_load:
             selector, _, rest = selector.partition('@')
 
         result = Result(self, self.select(selector))
 
-        if '@' in selector:
+        if need_load:
             result = result.load()
 
         if rest:
