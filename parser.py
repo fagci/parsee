@@ -97,7 +97,10 @@ class Parser(BeautifulSoup):
         if '@' in selector:
             selector, _, rest = selector.partition('@')
 
-        result = Result(self, self.select(selector)).load()
+        result = Result(self, self.select(selector))
+
+        if '@' in selector:
+            result = result.load()
 
         if rest:
             struct = None
