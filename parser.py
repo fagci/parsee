@@ -5,33 +5,22 @@ from bs4 import BeautifulSoup
 from bs4.element import ResultSet, Tag
 
 
-class Pages:
-    def __init__(self, pages):
-        self.pages = pages
-
-    def __iter__(self):
-        return self.pages
-
-    def __truediv__(self, v):
-        return (p / v for p in self.pages)
-
-    def __repr__(self):
-        return ','.join(str(p) for p in self.pages)
-
-
 class Result(ResultSet):
     def __init__(self, source, result):
         super().__init__(source, result=result)
 
-    def __truediv__(self, v):
-        if v == '@':
+    def _select(self, selector):
+        if selector == '@':
             return self.load()
-        if isinstance(v, int) or isinstance(v, slice):
-            return super().__getitem__(v)
+        if isinstance(selector, int) or isinstance(selector, slice):
+            return super().__getitem__(selector)
         raise NotImplementedError
 
-    def __getitem__(self, i):
-        return self.__truediv__(i)
+    def __truediv__(self, selector):
+        return self._select(selector)
+
+    def __getitem__(self, selector):
+        return self._select(selector)
 
     def __floordiv__(self, v):
         if isinstance(v, tuple) or isinstance(v, list):
@@ -39,7 +28,8 @@ class Result(ResultSet):
         return [self.getprop(v, r) for r in self]
 
     def load(self):
-        return Pages((self.source.load(r) for r in self))
+        return Result(self, (self.source.load(r) for r in self))
+        # return Pages((self.source.load(r) for r in self))
 
     @staticmethod
     def getprop(prop, item):
@@ -84,7 +74,8 @@ class Parser(BeautifulSoup):
                 if r.status_code >= 400:
                     sys.stderr.write('err: %s %s\n' % (r.status_code, uri))
                 super().__init__(r.text, 'lxml')
-            except RequestException:
+            except RequestException as e:
+                sys.stderr.write('err: %s %s\n' % (e, uri))
                 super().__init__('', 'lxml')
         elif markup:
             super().__init__(markup, 'lxml')
@@ -101,47 +92,71 @@ class Parser(BeautifulSoup):
         elif not uri.startswith(('http://', 'https://')):
             # maybe wrong solution for paths: level1/level2.html
             uri = '%s/%s' % (self.base, uri)
-        return Parser(uri, session=self._session, initiator=initiator)
+        return Parser(uri, session=self._session, initiator=initiator, debug=self.debug)
 
-    def __truediv__(self, selector):
+    def _select(self, selector: str or int):
+        if self.debug:
+            print('Select Start:', selector)
         if isinstance(selector, int):
             return super().__getitem__(selector)
 
         rest = None
+        output_format = None
 
-        # parser / 'a@' -> load every link
+        # @ -> load every link
+        # % -> output format (not implemented)
+
         need_load = '@' in selector
+        if '%' in selector:
+            selector, _, output_format = selector.rpartition('%')
+
         if need_load:
             selector, _, rest = selector.partition('@')
 
-        result = Result(self, self.select(selector))
+        if self.debug:
+            print('Select:', selector)
+        results = self.select(selector)
 
         if need_load:
-            result = result.load()
+            if self.debug:
+                print('Load:', selector)
+            results = Result(self, results).load()
 
-        if rest:
-            struct = None
-            if '@' not in rest and '|' in rest:
-                rest, _, struct = rest.partition('|')
-            result = (self.output(r, struct) / rest for r in result)
-            result = Pages(result)
+            # @ in selector, need to process rest selectors on result
+            if rest:
+                if self.debug:
+                    print('Select:', rest, 'for each page')
+                res = []
+                for page in results:
+                    for r in page._select(rest):
+                        res.append(r)
+                results = res
 
-        return result
+        return self.output(Result(self, results), output_format)
 
-    def output(self, data, struct):
-        if struct is None:
-            return data
+    def output(self, result: Result, fmt):
+        if self.debug:
+            print('Output:', fmt, result)
+        if not fmt:
+            return result
+        import re
+        print(type(result[0]))
+        fmt = re.sub(r'(\W|^)\.', '\\1item.', fmt)
+        return (eval(fmt, {'item': r}) for r in result)
 
     def __repr__(self):
         return str(self.result)
 
-    def __getitem__(self, i):
-        return self.__truediv__(i)
+    def __truediv__(self, selector):
+        return self._select(selector)
+
+    def __getitem__(self, selector):
+        return self._select(selector)
 
 
-def _main(start_uri, selector):
-    for t in Parser(start_uri) / selector:
-        print(str(t) if isinstance(t, Tag) else str(list(t)))
+def _main(start_uri, selector, d=False):
+    for t in Parser(start_uri, debug=d) / selector:
+        print(t)
 
 
 if __name__ == '__main__':
