@@ -9,6 +9,9 @@ class Result(ResultSet):
     def __init__(self, source, result):
         super().__init__(source, result=result)
 
+    def load(self):
+        return Result(self, (self.source.load(r) for r in self))
+
     def _select(self, selector):
         if selector == '@':
             return self.load()
@@ -21,23 +24,6 @@ class Result(ResultSet):
 
     def __getitem__(self, selector):
         return self._select(selector)
-
-    def __floordiv__(self, v):
-        if isinstance(v, tuple) or isinstance(v, list):
-            return [tuple(self.getprop(vv, r) for vv in v) for r in self]
-        return [self.getprop(v, r) for r in self]
-
-    def load(self):
-        return Result(self, (self.source.load(r) for r in self))
-        # return Pages((self.source.load(r) for r in self))
-
-    @staticmethod
-    def getprop(prop, item):
-        if prop == 'tag':
-            return item.name
-        if prop == 'text':
-            return item.text
-        return item.get(prop)
 
 
 class Parser(BeautifulSoup):
@@ -85,6 +71,8 @@ class Parser(BeautifulSoup):
         if isinstance(uri, Tag) and uri.name == 'a':
             initiator = uri
             uri = uri.get('href')
+
+        # normalize uri
         if uri.startswith('//'):
             uri = '%s:%s' % (self.scheme, uri)
         elif uri.startswith('/'):
@@ -92,11 +80,13 @@ class Parser(BeautifulSoup):
         elif not uri.startswith(('http://', 'https://')):
             # maybe wrong solution for paths: level1/level2.html
             uri = '%s/%s' % (self.base, uri)
+
         return Parser(uri, session=self._session, initiator=initiator, debug=self.debug)
 
     def _select(self, selector: str or int):
         if self.debug:
-            print('Select Start:', selector)
+            print('Initial Select:', selector)
+
         if isinstance(selector, int):
             return super().__getitem__(selector)
 
@@ -115,6 +105,7 @@ class Parser(BeautifulSoup):
 
         if self.debug:
             print('Select:', selector)
+
         results = self.select(selector)
 
         if need_load:
@@ -125,23 +116,18 @@ class Parser(BeautifulSoup):
             # @ in selector, need to process rest selectors on result
             if rest:
                 if self.debug:
-                    print('Select:', rest, 'for each page')
-                res = []
-                for page in results:
-                    for r in page._select(rest):
-                        res.append(r)
-                results = res
+                    print('Each page select:', rest)
+                results = (r for p in results for r in p._select(rest))
 
         return self.output(Result(self, results), output_format)
 
-    def output(self, result: Result, fmt):
-        if self.debug:
-            print('Output:', fmt, result)
+    def output(self, result, fmt):
         if not fmt:
             return result
+
         import re
-        print(type(result[0]))
         fmt = re.sub(r'(\W|^)\.', '\\1item.', fmt)
+
         return (eval(fmt, {'item': r}) for r in result)
 
     def __repr__(self):
