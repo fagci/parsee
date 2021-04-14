@@ -44,11 +44,12 @@ class Parser(BeautifulSoup):
             super().__init__(markup, 'lxml')
             return
 
-        # can use with pure markup
         from urllib.parse import ParseResult, urlparse
         from requests import Session
         from requests.exceptions import RequestException
+
         pu: ParseResult = urlparse(uri)
+
         self.start_uri = uri
         self.scheme = pu.scheme
         self.host = pu.hostname
