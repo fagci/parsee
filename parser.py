@@ -3,15 +3,16 @@ import logging
 import sys
 
 from bs4 import BeautifulSoup
-from bs4.element import ResultSet, Tag
+from bs4.element import Tag
 
 logging.basicConfig()
 logger = logging.getLogger('parsee')
 
 
-class Result(ResultSet):
+class Result(list):
     def __init__(self, source, result):
-        super().__init__(source, result=result)
+        super().__init__(result)
+        self.source = source
 
     def load(self):
         return Result(self, (self.source.load(r) for r in self))
@@ -33,7 +34,7 @@ class Result(ResultSet):
 class Parser(BeautifulSoup):
     headers = {'User-Agent': 'Mozilla/5.0'}
 
-    def __init__(self, uri='', markup='', session=None, initiator=None, debug=False):
+    def __init__(self, uri='', markup='', session=None, debug=False):
         from urllib.parse import ParseResult, urlparse
         from requests import Session
         from requests.exceptions import RequestException
@@ -48,7 +49,6 @@ class Parser(BeautifulSoup):
         self.host = pu.hostname
         self.start_path = '?'.join((pu.path, pu.query))
         self.base = '%s://%s' % (pu.scheme, pu.netloc)
-        self.initiator = initiator
 
         self._session = session or Session()
 
@@ -59,16 +59,15 @@ class Parser(BeautifulSoup):
                 if r.status_code >= 400:
                     sys.stderr.write('err: %s %s\n' % (r.status_code, uri))
                 markup = r.text
+                self.elapsed = r.elapsed.total_seconds()
             except RequestException as e:
-                sys.stderr.write('err: %s %s\n' % (e, uri))
+                sys.stderr.write('err: %s %s\n' % (type(e), uri))
                 markup = ''
 
         super().__init__(markup, 'lxml')
 
     def load(self, uri):
-        initiator = self
         if isinstance(uri, Tag) and uri.name == 'a':
-            initiator = uri
             uri = uri.get('href')
 
         # normalize uri
@@ -80,7 +79,7 @@ class Parser(BeautifulSoup):
             # maybe wrong solution for paths: level1/level2.html
             uri = '%s/%s' % (self.base, uri)
 
-        return Parser(uri, session=self._session, initiator=initiator, debug=self.debug)
+        return Parser(uri, session=self._session, debug=self.debug)
 
     def _select(self, selector):
         logger.debug('Initial Select: %s', selector)
