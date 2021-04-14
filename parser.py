@@ -121,14 +121,14 @@ class Parser(BeautifulSoup):
 
         return self.output(Result(self, results), output_format)
 
-    def output(self, result, fmt):
+    def output(self, result: Result, fmt):
         if not fmt:
             return result
 
         import re
         fmt = re.sub(r'(\W|^)\.', '\\1item.', fmt)
 
-        return (eval(fmt, {'item': r}) for r in result)
+        return (eval(fmt, {'item': r, 'result': result}) for r in result)
 
     def __repr__(self):
         return str(self.result)
