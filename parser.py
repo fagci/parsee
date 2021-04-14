@@ -35,34 +35,36 @@ class Parser(BeautifulSoup):
     headers = {'User-Agent': 'Mozilla/5.0'}
 
     def __init__(self, uri='', markup='', session=None, debug=False):
+
+        logger.setLevel(logging.DEBUG if debug else logging.ERROR)
+
+        self.debug = debug
+
+        if not uri:
+            super().__init__(markup, 'lxml')
+            return
+
+        # can use with pure markup
         from urllib.parse import ParseResult, urlparse
         from requests import Session
         from requests.exceptions import RequestException
-
-        self.start_uri = uri
-        self.debug = debug
-        logger.setLevel(logging.DEBUG if debug else logging.ERROR)
-
         pu: ParseResult = urlparse(uri)
-
+        self.start_uri = uri
         self.scheme = pu.scheme
         self.host = pu.hostname
         self.start_path = '?'.join((pu.path, pu.query))
         self.base = '%s://%s' % (pu.scheme, pu.netloc)
-
         self._session = session or Session()
 
-        if uri:
-            try:
-                logger.debug('GET %s', uri)
-                r = self._session.get(uri, timeout=10, headers=self.headers)
-                if r.status_code >= 400:
-                    sys.stderr.write('err: %s %s\n' % (r.status_code, uri))
-                markup = r.text
-                self.elapsed = r.elapsed.total_seconds()
-            except RequestException as e:
-                sys.stderr.write('err: %s %s\n' % (type(e), uri))
-                markup = ''
+        try:
+            logger.debug('GET %s', uri)
+            r = self._session.get(uri, timeout=10, headers=self.headers)
+            if r.status_code >= 400:
+                sys.stderr.write('err: %s %s\n' % (r.status_code, uri))
+            markup = r.text
+            self.elapsed = r.elapsed.total_seconds()
+        except RequestException as e:
+            sys.stderr.write('err: %s %s\n' % (type(e), uri))
 
         super().__init__(markup, 'lxml')
 
