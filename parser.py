@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 import logging
-import sys
 
 from bs4 import BeautifulSoup
 from bs4.element import Tag
@@ -61,11 +60,11 @@ class Parser(BeautifulSoup):
             logger.debug('GET %s', uri)
             r = self._session.get(uri, timeout=10, headers=self.headers)
             if r.status_code >= 400:
-                sys.stderr.write('err: %s %s\n' % (r.status_code, uri))
+                logger.error('%s %s\n', r.status_code, uri)
             markup = r.text
             self.elapsed = r.elapsed.total_seconds()
         except RequestException as e:
-            sys.stderr.write('err: %s %s\n' % (type(e), uri))
+            logger.error('%s %s\n', type(e), uri)
 
         super().__init__(markup, 'lxml')
 
