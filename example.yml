@@ -11,4 +11,6 @@ regions:
   select: 'table:nth-child(1) ul a:-soup-contains("область")@'
 
 output:
+  in: regions
+  select: 'title%.text'
   type: csv

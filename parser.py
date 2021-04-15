@@ -21,9 +21,8 @@ class Result:
 
     def _select(self, selector):
         if isinstance(selector, str):
-            return Result(self, (r.select(selector) for r in self))
-        if selector == '@':
-            return self.load()
+            result = (rr for r in self for rr in r._select(selector))
+            return Result(self, result)
         return list(self.result).__getitem__(selector)
 
     def __iter__(self):
