@@ -125,7 +125,7 @@ class Parser(BeautifulSoup):
             return result
 
         import re
-        fmt = re.sub(r'(\|\||^|[,+/*%~|[(-])\.', r'\1item.', fmt)
+        fmt = re.sub(r'(^|[^")\]])\.', r'\1item.', fmt)
 
         return (eval(fmt, {'item': r, 'result': result}) for r in result)
 
