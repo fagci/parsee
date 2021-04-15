@@ -102,7 +102,7 @@ class Parser(BeautifulSoup):
         has_output_format = '%' in selector
 
         if has_output_format:
-            selector, _, output_format = selector.rpartition('%')
+            selector, _, output_format = selector.partition('%')
 
         if has_load_link:
             selector, _, next_page_selector = selector.partition('@')
@@ -126,6 +126,7 @@ class Parser(BeautifulSoup):
 
         import re
         fmt = re.sub(r'(^|[^")\]])\.', r'\1item.', fmt)
+        logger.debug('Format: %s', fmt)
 
         return (eval(fmt, {'item': r, 'result': result}) for r in result)
 
