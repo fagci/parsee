@@ -19,11 +19,11 @@ class Result:
         return Result(self, (self.source.load(r) for r in self))
 
     def _select(self, selector):
-        if isinstance(selector, int) or isinstance(selector, slice):
-            return list(self.result).__getitem__(selector)
+        if isinstance(selector, str):
+            return Result(self, (r.select(selector) for r in self))
         if selector == '@':
             return self.load()
-        return Result(self, (r.select(selector) for r in self))
+        return list(self.result).__getitem__(selector)
 
     def __iter__(self):
         return iter(self.result)
@@ -36,19 +36,20 @@ class Result:
 
 
 class Parser(BeautifulSoup):
-    headers = {'User-Agent': 'Mozilla/5.0'}
-
     __slots__ = ('debug', 'start_uri', 'scheme',
                  'start_path', 'base', 'host', '_session', 'elapsed')
+    uris = set()
 
-    def __init__(self, uri='', markup='', session=None, debug=False):
+    def __init__(self, uri='', markup='', session=None, headers={'User-Agent': 'Mozilla/5.0'}, debug=False):
         logger.setLevel(logging.DEBUG if debug else logging.ERROR)
 
         self.debug = debug
 
-        if not uri:
+        if not uri or uri in self.uris:
             super().__init__(markup, 'lxml')
             return
+
+        self.uris.add(uri)
 
         from urllib.parse import ParseResult, urlparse
         from requests import Session
@@ -65,7 +66,7 @@ class Parser(BeautifulSoup):
 
         try:
             logger.debug('GET %s', uri)
-            r = self._session.get(uri, timeout=10, headers=self.headers)
+            r = self._session.get(uri, timeout=10, headers=headers)
             if r.status_code >= 400:
                 logger.error('%s %s\n', r.status_code, uri)
             markup = r.text
