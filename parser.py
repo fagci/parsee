@@ -125,7 +125,7 @@ class Parser(BeautifulSoup):
             return result
 
         import re
-        fmt = re.sub(r'(\W|^)\.', '\\1item.', fmt)
+        fmt = re.sub(r'(\|\||^|[,+/*%~|[(-])\.', r'\1item.', fmt)
 
         return (eval(fmt, {'item': r, 'result': result}) for r in result)
 
@@ -146,4 +146,8 @@ def _main(start_uri, selector, d=False):
 
 if __name__ == '__main__':
     from fire import Fire
-    Fire(_main)
+    try:
+        Fire(_main)
+    except KeyboardInterrupt:
+        print('Interrupted by user.')
+        exit(130)
