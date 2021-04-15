@@ -38,8 +38,10 @@ class Result:
 class Parser(BeautifulSoup):
     headers = {'User-Agent': 'Mozilla/5.0'}
 
-    def __init__(self, uri='', markup='', session=None, debug=False):
+    __slots__ = ('debug', 'start_uri', 'scheme',
+                 'start_path', 'base', 'host', '_session', 'elapsed')
 
+    def __init__(self, uri='', markup='', session=None, debug=False):
         logger.setLevel(logging.DEBUG if debug else logging.ERROR)
 
         self.debug = debug
