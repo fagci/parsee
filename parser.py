@@ -8,20 +8,25 @@ logging.basicConfig()
 logger = logging.getLogger('parsee')
 
 
-class Result(list):
+class Result:
+    __slots__ = ('source', 'result')
+
     def __init__(self, source, result):
-        super().__init__(result)
         self.source = source
+        self.result = result
 
     def load(self):
         return Result(self, (self.source.load(r) for r in self))
 
     def _select(self, selector):
         if isinstance(selector, int) or isinstance(selector, slice):
-            return super().__getitem__(selector)
+            return list(self.result).__getitem__(selector)
         if selector == '@':
             return self.load()
         return Result(self, (r.select(selector) for r in self))
+
+    def __iter__(self):
+        return iter(self.result)
 
     def __truediv__(self, selector):
         return self._select(selector)
@@ -86,30 +91,28 @@ class Parser(BeautifulSoup):
     def _select(self, selector):
         logger.debug('Initial Select: %s', selector)
 
-        rest = None
+        next_page_selector = None
         output_format = None
 
-        # @ -> load every link
-        # % -> output format
+        has_load_link = '@' in selector
+        has_output_format = '%' in selector
 
-        if '%' in selector:
+        if has_output_format:
             selector, _, output_format = selector.rpartition('%')
 
-        need_load = '@' in selector
-
-        if need_load:
-            selector, _, rest = selector.partition('@')
+        if has_load_link:
+            selector, _, next_page_selector = selector.partition('@')
 
         logger.debug('Select: %s', selector)
         results = self.select(selector)
 
-        if need_load:
+        if has_load_link:
             results = Result(self, results).load()
 
-            # @ in selector, need to process rest selectors on result
-            if rest:
-                logger.debug('Each page select: %s', rest)
-                results = (r for p in results for r in p._select(rest))
+            if next_page_selector:
+                logger.debug('Each page select: %s', next_page_selector)
+                results = (r for p in results for r in p._select(
+                    next_page_selector))
 
         return self.output(Result(self, results), output_format)
 
