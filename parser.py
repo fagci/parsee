@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Sweet sites parser"""
 import logging
+from typing import Iterable
 
 from bs4 import BeautifulSoup
 from bs4.element import Tag
@@ -10,19 +11,17 @@ logger = logging.getLogger('parsee')
 
 
 class Result:
-    __slots__ = ('source', 'result')
+    __slots__ = ('source', 'result', 'initiator')
 
-    def __init__(self, source, result):
+    def __init__(self, source, result, initiator=None):
         self.source = source
         self.result = result
-
-    def load(self):
-        return Result(self, (self.source.load(r) for r in self))
+        self.initiator = initiator
 
     def _select(self, selector):
         if isinstance(selector, str):
             result = (rr for r in self for rr in r._select(selector))
-            return Result(self, result)
+            return Result(self.source, result, selector)
         return list(self.result).__getitem__(selector)
 
     def __iter__(self):
@@ -80,6 +79,10 @@ class Parser(BeautifulSoup):
         if isinstance(uri, Tag) and uri.name == 'a':
             uri = uri.get('href')
 
+        elif isinstance(uri, Iterable) and not isinstance(uri, str):
+            logger.debug('Load iterable: %s', uri)
+            return (self.load(r) for r in uri)
+
         # normalize uri
         if uri.startswith('//'):
             uri = '%s:%s' % (self.scheme, uri)
@@ -99,7 +102,7 @@ class Parser(BeautifulSoup):
         results = self.select(selector)
 
         if has_load_link:
-            results = Result(self, results).load()
+            results = self.load(results)
 
             if next_page_selector:
                 logger.debug('Each page select: %s', next_page_selector)

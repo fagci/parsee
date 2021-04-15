@@ -6,6 +6,12 @@ from fire import Fire
 from parser import Parser
 
 
+def show(cfg, results):
+    fmt = cfg.get('format')
+    print(repr(fmt))
+    print(exec(fmt, results))
+
+
 def process(cfg, debug):
     ctx = {}
     ctx['start'] = Parser(cfg.get('start'), debug=debug)
@@ -17,8 +23,7 @@ def process(cfg, debug):
                 select = v.get('select')
                 src_data = ctx.get(src)
                 ctx[k] = src_data._select(select) if select else src_data
-    for result in ctx.get('output'):
-        print(result)
+    show(cfg.get('output'), ctx)
 
 
 def main(file, d=False):

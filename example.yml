@@ -12,5 +12,6 @@ regions:
 
 output:
   in: regions
-  select: 'title%.text'
-  type: csv
+  format: |
+    for r in output:
+      print(r.title.text, output.source.title.text)
