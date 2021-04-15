@@ -95,17 +95,8 @@ class Parser(BeautifulSoup):
     def _select(self, selector):
         logger.debug('Initial Select: %s', selector)
 
-        next_page_selector = None
-        output_format = None
-
-        has_load_link = '@' in selector
-        has_output_format = '%' in selector
-
-        if has_output_format:
-            selector, _, output_format = selector.partition('%')
-
-        if has_load_link:
-            selector, _, next_page_selector = selector.partition('@')
+        selector, _, output_format = selector.partition('%')
+        selector, has_load_link, next_page_selector = selector.partition('@')
 
         logger.debug('Select: %s', selector)
         results = self.select(selector)
