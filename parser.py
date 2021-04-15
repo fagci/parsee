@@ -93,8 +93,6 @@ class Parser(BeautifulSoup):
         return Parser(uri, session=self._session, debug=self.debug)
 
     def _select(self, selector):
-        logger.debug('Initial Select: %s', selector)
-
         selector, _, output_format = selector.partition('%')
         selector, has_load_link, next_page_selector = selector.partition('@')
 

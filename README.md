@@ -2,6 +2,14 @@
 
 Sweet python tiny site parser.
 
+## Lang syntax
+
+```config
+<selector> [a@ <selector>] [% <python_code>]
+```
+
+Note: `python_code` relative to last tag. Use `.` (dot) to get attribute or call method.
+
 ## Examples
 
 ### Crawl first page links, get paragraph in each page next to heading contains text
@@ -10,4 +18,16 @@ Sweet python tiny site parser.
 for page in parser / '.links a@':
     for p in page / 'h3:-soup-contains("Some title")+p':
         print(p.text)
+```
+
+### Get titles of subpages
+
+```sh
+./parser.py http://site.org 'a@a@title%.text'
+```
+
+### Get links at home page
+
+```sh
+./parser.py http://site.org 'a%.get("href")'
 ```
