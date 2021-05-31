@@ -51,7 +51,7 @@ class Parser(BeautifulSoup):
         self.uris.add(uri)
 
         from urllib.parse import ParseResult, urlparse
-        from requests import Session
+        from cfscrape import CloudflareScraper as Session
         from requests.exceptions import RequestException
 
         pu: ParseResult = urlparse(uri)

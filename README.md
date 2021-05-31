@@ -2,6 +2,8 @@
 
 Sweet python tiny site parser.
 
+[new] Now with CloudFlare bypass
+
 ## Lang syntax
 
 ```config
