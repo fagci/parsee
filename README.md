@@ -17,7 +17,7 @@ Note: `python_code` relative to last tag. Use `.` (dot) to get attribute or call
 Before use, install requirements:
 
 ```sh
-pip install -r requirements.txt
+pip3 install -r requirements.txt
 ```
 
 ## Examples
