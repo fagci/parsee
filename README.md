@@ -10,6 +10,14 @@ Sweet python tiny site parser.
 
 Note: `python_code` relative to last tag. Use `.` (dot) to get attribute or call method.
 
+## Requirements
+
+Before use, install requirements:
+
+```sh
+pip install -r requirements.txt
+```
+
 ## Examples
 
 ### Crawl first page links, get paragraph in each page next to heading contains text
