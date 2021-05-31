@@ -14,18 +14,18 @@ Note: `python_code` relative to last tag. Use `.` (dot) to get attribute or call
 
 ## Requirements
 
-Before use, install requirements:
-
-```sh
-pip3 install -r requirements.txt
-```
-
-Also, ensure that you have installed:
+Ensure that you have installed (for lxml):
 
 `[!] for Termux without sudo`
 
 ```
 sudo apt-get install libxml2 libxslt
+```
+
+Before use, install requirements:
+
+```sh
+pip3 install -r requirements.txt
 ```
 
 ## Examples
