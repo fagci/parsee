@@ -20,6 +20,14 @@ Before use, install requirements:
 pip3 install -r requirements.txt
 ```
 
+Also, ensure that you have installed:
+
+`[!] for Termux without sudo`
+
+```
+sudo apt-get install libxml2 libxslt
+```
+
 ## Examples
 
 ### Crawl first page links, get paragraph in each page next to heading contains text
