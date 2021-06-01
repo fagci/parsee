@@ -4,6 +4,8 @@ Sweet python tiny site parser.
 
 [new] Now with CloudFlare bypass
 
+[Немного на русском](https://mikhail-yudin.ru/blog/frontend/parsee_prostoi_vkusniy_parser_saitov/)
+
 ## Lang syntax
 
 ```config
