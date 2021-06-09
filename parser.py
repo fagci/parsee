@@ -116,10 +116,11 @@ class Parser(BeautifulSoup):
             return result
 
         import re
-        fmt = re.sub(r'(^|[^")\]])\.', r'\1item.', fmt)
+        import json
+        fmt = re.sub(r'(^|[^")\[\]A-Za-z])\.', r'\1item.', fmt)
         logger.debug('Format: %s', fmt)
 
-        return (eval(fmt, {'item': r, 'result': result}) for r in result)
+        return (eval(fmt, {'item': r, 'result': result, 'json': json}) for r in result)
 
     def __repr__(self):
         return str(self.result)
