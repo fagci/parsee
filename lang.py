@@ -13,9 +13,7 @@ def show(cfg, results):
 
 
 def process(cfg, debug):
-    ctx = {}
-    ctx['start'] = Parser(cfg.get('start'), debug=debug)
-
+    ctx = {'start': Parser(cfg.get('start'), debug=debug)}
     for k, v in cfg.items():
         if isinstance(v, dict):
             src = v.get('in')
